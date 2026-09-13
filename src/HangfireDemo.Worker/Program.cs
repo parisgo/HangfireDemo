@@ -13,7 +13,7 @@ var hangfireSettings = builder.Configuration
 
 builder.Services.AddHangfirePersistence(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<ImportCommandeJob>();
+builder.Services.AddJobExecution();
 
 builder.Services.AddHangfireServer(options =>
 {

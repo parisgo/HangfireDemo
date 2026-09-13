@@ -11,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HangfireDemo.Core\HangfireDemo.Core.csproj" />
+    <ProjectReference Include="..\..\src\HangfireDemo.Api\HangfireDemo.Api.csproj" />
   </ItemGroup>
 </Project>

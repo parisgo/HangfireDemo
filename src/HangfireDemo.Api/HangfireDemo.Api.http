@@ -1,6 +1,18 @@
 @ApiUrl = https://localhost:7180
 @ApiKey = replace-in-non-development
 
+### List the available jobs
+GET {{ApiUrl}}/api/jobs
+X-Hangfire-Api-Key: {{ApiKey}}
+
+### Simulate sending a report (logs only; no email)
+POST {{ApiUrl}}/api/jobs/send-report
+X-Hangfire-Api-Key: {{ApiKey}}
+
+### Schedule the simulated report
+POST {{ApiUrl}}/api/jobs/send-report/delayed?minutes=1
+X-Hangfire-Api-Key: {{ApiKey}}
+
 ### Readiness checks SQL storage and an active Worker heartbeat
 GET {{ApiUrl}}/health/ready
 

@@ -1,6 +1,7 @@
 using Hangfire;
 using Hangfire.Dashboard;
 using HangfireDemo.Api.Security;
+using HangfireDemo.Core.Jobs;
 using HangfireDemo.Core.Jobs.Configuration;
 using HangfireDemo.Core.Jobs.Health;
 using Microsoft.AspNetCore.Authentication;
@@ -67,6 +68,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddHangfirePersistence(builder.Configuration);
+builder.Services.AddJobCatalog();
 builder.Services.AddSingleton<HangfireDashboardAuthorizationFilter>();
 builder.Services.AddHealthChecks()
     .AddCheck<HangfireServerHealthCheck>("hangfire", tags: ["ready"]);

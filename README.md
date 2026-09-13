@@ -36,8 +36,6 @@ tests/
   HangfireDemo.Tests/
 ```
 
-原 Application、Infrastructure 和 Jobs 已合并到 Core。类型解析器兼容数据库中以旧 `HangfireDemo.Jobs` 类型名保存的导入任务；新任务使用 Core 类型名。升级时应停止旧 Api 和 Worker，再一起切换到新版，避免旧 Worker 读取新版任务。
-
 ## 初始化数据库
 
 创建数据库：
@@ -103,11 +101,27 @@ Readiness 会实际查询 Hangfire 存储，并要求最近 120 秒内至少存�
 
 ## 调用任务
 
+API 通过 Core 的 `JobCatalog` 查找任务，不包含具体业务任务的分支。所有接口仍需要原有操作员权限。
+
 ```http
-POST /api/jobs/import-commandes?batchId=<可选 Guid>
-POST /api/jobs/import-commandes/delayed?minutes=5&batchId=<可选 Guid>
-POST /api/jobs/import-commandes/trigger-recurring
+GET /api/jobs
+POST /api/jobs/{jobName}?batchId=<可选 Guid>
+POST /api/jobs/{jobName}/delayed?minutes=5&batchId=<可选 Guid>
+POST /api/jobs/{jobName}/trigger-recurring
 ```
+
+当前支持 `import-commandes` 和 `send-report`。未知任务返回 404，非法延迟（不在 1–1440 分钟内）返回 400，没有定时计划的任务调用 `trigger-recurring` 返回 400。`GET /api/jobs` 返回任务名称、队列及定时任务 ID。
+
+`send-report` 使用 `default` 队列，模拟执行约一秒，在 Worker 日志输出开始和完成信息，不生成文件、不实际发送邮件，也不提供批次去重。可以在 Dashboard 查看执行结果：
+
+```http
+POST /api/jobs/send-report
+POST /api/jobs/send-report/delayed?minutes=1
+```
+
+新增功能时，在 Core 中添加 Job 类（通过 `[Queue]` 指定队列，延迟任务到期入队时也使用此配置），在 `JobCatalog` 添加名称、相同队列和调用表达式，并在 `AddJobExecution` 注册 Job 及所需服务。无需修改 Api 或 Worker 源码；需要发布包含新版 Core 的 Api 和 Worker。若增加自定义队列，还需将其加入 Worker 的 `Hangfire:Queues`。需要定时执行的任务另在 Core 注册定时计划，并在目录中设置对应 ID。
+
+通用入口目前接受公共参数 `batchId`，请求人从登录身份获取；新增任务若需要业务参数，应扩展 Core 的任务参数约定，而不是把类名、方法名直接暴露给客户端。
 
 客户端重试请求时应重复使用同一个 `batchId`。定时任务使用 Hangfire Job ID 生成稳定批次键，因此 Hangfire 自动重试不会产生新的业务批次。
 
