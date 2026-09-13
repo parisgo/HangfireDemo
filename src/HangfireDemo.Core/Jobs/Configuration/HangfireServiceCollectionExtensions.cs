@@ -38,7 +38,6 @@ public static class HangfireServiceCollectionExtensions
         services.AddHangfire(hangfire => hangfire
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
-            .UseTypeResolver(JobTypeResolver.Resolve)
             .UseRecommendedSerializerSettings()
             .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
             {

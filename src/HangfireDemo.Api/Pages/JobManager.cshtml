@@ -1,0 +1,75 @@
+@page "/job-manager"
+@using HangfireDemo.Api.Security
+@{
+    Layout = null;
+    var admin = User.IsInRole(SecurityPolicies.HangfireAdmin);
+    var canRun = admin || User.IsInRole(SecurityPolicies.HangfireOperator);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Job manager · Hangfire</title>
+    <link rel="stylesheet" href="/job-manager.css" />
+</head>
+<body data-page-title="任务管理" data-can-run="@canRun.ToString().ToLowerInvariant()" data-admin="@admin.ToString().ToLowerInvariant()">
+<main>
+    <header><div><p class="eyebrow">HANGFIRE / PLUGINS</p><h1 data-i18n="任务管理">Job manager</h1><p data-i18n="上传功能，选择时间，让 Worker 完成执行。">Choose a plugin and schedule a job for the Worker to execute.</p></div><div class="page-actions">
+        <a class="dashboard" href="/hangfire">Hangfire DashBorad ↗</a>
+        <a class="button-link secondary" href="/plugin-library" data-i18n="插件库">Plugin library</a>
+        @if (canRun)
+        {
+            <button type="button" id="open-create" aria-haspopup="dialog" aria-controls="create-dialog" data-i18n="创建任务">Create job</button>
+        }
+        <select class="language-select" data-language-picker aria-label="Language / 语言"><option value="en">English</option><option value="zh-CN">中文</option></select>
+    </div></header>
+    <div hidden>@Html.AntiForgeryToken()</div>
+    <div id="feedback" role="status" aria-live="polite" hidden></div>
+    <section class="card">
+        <div class="section-title"><h2 data-i18n="任务列表">Jobs</h2><span class="muted" data-i18n="最近 100 条 · 每 5 秒刷新">Latest 100 jobs · Refreshes every 5 seconds</span></div>
+        <p class="hint" data-i18n="重启会将原任务重新入队，保留参数和批次 ID；业务去重规则仍然生效。删除不影响周期计划，也不会撤销已完成的业务操作。">Restart requeues the same job with its parameters and batch ID. Business deduplication still applies. Deleting a job does not remove its recurring schedule or undo completed business operations.</p>
+        <div id="executions"><p class="muted" data-i18n="正在读取任务…">Loading jobs…</p></div>
+        <nav class="plugin-pagination" aria-label="Job pagination" data-i18n-aria-label="任务列表分页">
+            <span id="execution-count" class="muted" aria-live="polite"></span>
+            <div class="page-actions">
+                <label for="execution-page-size" class="page-size-label" data-i18n="每页条数">Rows per page</label>
+                <select id="execution-page-size" class="language-select"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select>
+                <button id="execution-previous" type="button" class="secondary" data-i18n="上一页">Previous</button>
+                <button id="execution-next" type="button" class="secondary" data-i18n="下一页">Next</button>
+            </div>
+        </nav>
+    </section>
+
+<dialog id="create-dialog" class="manager-dialog" aria-labelledby="create-title">
+            <div class="dialog-heading"><h2 id="create-title" data-i18n="创建任务">Create job</h2><button type="button" class="dialog-close" data-close="create-dialog" aria-label="Close job creation" data-i18n-aria-label="关闭创建任务" data-i18n="关闭">Close</button></div><div class="dialog-feedback" role="status" aria-live="polite" hidden></div>
+            <p id="plugin-version-hint" class="hint" data-i18n="尚未开始的任务和重试自动使用最新激活版本；正在执行的任务保持当前版本。">Queued jobs and retries use the latest active version. Running jobs keep their current version.</p>
+            @if (canRun)
+            {
+                <form id="job-form">
+                    <label for="job-name" data-i18n="任务名">Job name</label>
+                    <input id="job-name" type="text" required maxlength="200" />
+                    <label for="job-kind" data-i18n="任务类型">Job type</label>
+                    <select id="job-kind"><option value="Plugin" data-i18n="插件任务">Plugin job</option><option value="WebAPI" data-i18n="WebAPI 任务">WebAPI job</option></select>
+                    <div id="plugin-fields"><label for="task" data-i18n="功能">Function</label><select id="task" required><option value="" data-i18n="暂无可用插件任务">No plugin jobs available</option></select></div>
+                    <div id="webapi-fields" hidden><label for="webapi-url">URL</label><input id="webapi-url" type="url" placeholder="https://localhost:7062/WeatherForecast" maxlength="2048" disabled />
+                        <p class="hint" data-i18n="Worker 将发送 GET 请求，无需填写 JSON 参数。">The Worker sends a GET request. No JSON parameters are needed.</p></div>
+                    <label for="mode" data-i18n="执行方式">Schedule type</label><select id="mode"><option value="Fire-and-forget" data-i18n="立即执行">Fire-and-forget</option><option value="Delayed" data-i18n="延迟执行">Delayed</option><option value="Recurring" data-i18n="周期任务">Recurring</option></select>
+                    <div id="delay-fields" hidden><label for="delay" data-i18n="延迟分钟">Delay (minutes)</label><input id="delay" type="number" min="1" max="1440" value="1" /></div>
+                    <div id="recurring-fields" hidden>
+                        <label for="schedule-id" data-i18n="计划 ID">Schedule ID</label><input id="schedule-id" placeholder="daily-report" pattern="[a-z0-9][a-z0-9-]{0,63}" />
+                        <div class="fields"><div><label for="cron" data-i18n="Cron（五段）">Cron (5 fields)</label><input id="cron" value="0 9 * * *" /></div><div><label for="timezone" data-i18n="时区">Time zone</label><input id="timezone" value="Europe/Paris" /></div></div>
+                        <p class="hint" data-i18n="0 9 * * * 表示每天 09:00；* * * * * 表示每分钟。">0 9 * * * runs daily at 09:00; * * * * * runs every minute.</p>
+                    </div>
+                    <div id="parameter-fields"><label for="parameters" data-i18n="JSON 参数">JSON parameters</label><textarea id="parameters" rows="7" spellcheck="false">{}</textarea></div>
+                    <button id="submit-job" type="submit" data-i18n="提交任务">Submit job</button>
+                </form>
+            }
+            else { <p data-i18n="当前为只读账户，可以查看插件和周期计划。">This account has read-only access.</p> }
+        </dialog>
+    <footer data-i18n="API 管理调度 · Worker 执行插件 · SQL Server 持久化">API scheduling · Worker execution · SQL Server storage</footer>
+</main>
+<script src="/i18n.js" defer></script>
+<script src="/job-manager.js" defer></script>
+</body>
+</html>

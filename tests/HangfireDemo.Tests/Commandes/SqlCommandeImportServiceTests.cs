@@ -1,4 +1,4 @@
-using HangfireDemo.Core.Commandes;
+using ImportCommandes.Plugin.Commandes;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace HangfireDemo.Tests.Commandes;
@@ -9,7 +9,7 @@ public sealed class SqlCommandeImportServiceTests
     public async Task ImportAsync_BatchIdLongerThanDatabaseLimit_FailsBeforeConnecting()
     {
         var service = new SqlCommandeImportService(
-            "Server=unused",
+            () => throw new InvalidOperationException("Validation must run before opening a connection."),
             NullLogger<SqlCommandeImportService>.Instance);
         var request = new CommandeImportRequest(
             new string('x', 101),

@@ -1,14 +1,17 @@
 using Hangfire;
 using Hangfire.Dashboard;
 using HangfireDemo.Api.Security;
-using HangfireDemo.Core.Jobs;
+using HangfireDemo.Core.Plugins;
 using HangfireDemo.Core.Jobs.Configuration;
 using HangfireDemo.Core.Jobs.Health;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
+Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 var builder = WebApplication.CreateBuilder(args);
+HangfireDemo.Core.Logging.ApplicationLogging.AddApplicationLogging(builder.Logging,
+    builder.Configuration, builder.Environment.ContentRootPath, "Api");
 
 var security = builder.Configuration
     .GetSection(HangfireSecurityOptions.SectionName)
@@ -36,6 +39,9 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
+    options.AddPolicy(SecurityPolicies.HangfireAdmin, policy => policy.RequireRole(SecurityPolicies.HangfireAdmin));
+    options.AddPolicy(SecurityPolicies.HangfireReader, policy => policy.RequireRole(
+        SecurityPolicies.HangfireReader, SecurityPolicies.HangfireOperator, SecurityPolicies.HangfireAdmin));
     options.AddPolicy(
         SecurityPolicies.HangfireOperator,
         policy => policy.RequireRole(
@@ -44,6 +50,14 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddRazorPages(options => options.Conventions.AuthorizeFolder("/", SecurityPolicies.HangfireReader));
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+builder.Services.AddScoped<PluginRequestFilter>();
+builder.Services.AddPluginStorage(builder.Configuration);
+builder.Services.AddScoped<PluginScheduling>();
+builder.Services.AddScoped<PluginExecutions>();
+builder.Services.AddScoped<HangfireDemo.Core.WebApi.WebApiScheduling>();
+builder.Services.AddScoped<PluginDashboardNames>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -68,7 +82,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddHangfirePersistence(builder.Configuration);
-builder.Services.AddJobCatalog();
+
 builder.Services.AddSingleton<HangfireDashboardAuthorizationFilter>();
 builder.Services.AddHealthChecks()
     .AddCheck<HangfireServerHealthCheck>("hangfire", tags: ["ready"]);
@@ -82,22 +96,40 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
 var dashboardAuthorization =
     app.Services.GetRequiredService<HangfireDashboardAuthorizationFilter>();
 
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/hangfire") &&
+        (context.User.IsInRole(SecurityPolicies.HangfireReader) ||
+         context.User.IsInRole(SecurityPolicies.HangfireOperator) ||
+         context.User.IsInRole(SecurityPolicies.HangfireAdmin)))
+        await context.RequestServices.GetRequiredService<PluginDashboardNames>().LoadAsync(context.RequestAborted);
+    await next(context);
+});
+
+var dashboardOptions = new DashboardOptions
 {
     DashboardTitle = "Company Hangfire",
+    AppPath = "/job-manager",
     Authorization = [dashboardAuthorization],
     IsReadOnlyFunc = context =>
         !context.GetHttpContext().User.IsInRole(SecurityPolicies.HangfireAdmin)
-});
+};
+var defaultDisplayName = dashboardOptions.DisplayNameFunc;
+dashboardOptions.DisplayNameFunc = (context, job) =>
+    context.GetHttpContext().RequestServices.GetRequiredService<PluginDashboardNames>().Resolve(job)
+    ?? defaultDisplayName?.Invoke(context, job) ?? job.ToString();
+app.UseHangfireDashboard("/hangfire", dashboardOptions);
 
 app.MapControllers();
-app.MapGet("/", () => Results.Redirect("/hangfire"));
+app.MapRazorPages();
+app.MapGet("/", () => Results.Redirect("/job-manager"));
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {

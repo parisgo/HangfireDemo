@@ -1,29 +1,20 @@
 @ApiUrl = https://localhost:7180
 @ApiKey = replace-in-non-development
 
-### List the available jobs
-GET {{ApiUrl}}/api/jobs
+### List active plugin jobs
+GET {{ApiUrl}}/api/plugin-jobs
 X-Hangfire-Api-Key: {{ApiKey}}
 
-### Simulate sending a report (logs only; no email)
-POST {{ApiUrl}}/api/jobs/send-report
+### Simulated report
+POST {{ApiUrl}}/api/plugin-jobs/reports/send-report/executions
 X-Hangfire-Api-Key: {{ApiKey}}
+Content-Type: application/json
 
-### Schedule the simulated report
-POST {{ApiUrl}}/api/jobs/send-report/delayed?minutes=1
+{"mode":"Fire-and-forget","parameters":{"reportName":"Monthly report","recipient":"demo@example.com"}}
+
+### Import after uploading the commandes plugin
+POST {{ApiUrl}}/api/plugin-jobs/commandes/import-commandes/executions
 X-Hangfire-Api-Key: {{ApiKey}}
+Content-Type: application/json
 
-### Readiness checks SQL storage and an active Worker heartbeat
-GET {{ApiUrl}}/health/ready
-
-### Enqueue with a caller-supplied idempotency key
-POST {{ApiUrl}}/api/jobs/import-commandes?batchId=2a7bb48e-2f81-4bfe-acd3-e084c94588d3
-X-Hangfire-Api-Key: {{ApiKey}}
-
-### Delayed execution
-POST {{ApiUrl}}/api/jobs/import-commandes/delayed?minutes=5
-X-Hangfire-Api-Key: {{ApiKey}}
-
-### Trigger the registered recurring job
-POST {{ApiUrl}}/api/jobs/import-commandes/trigger-recurring
-X-Hangfire-Api-Key: {{ApiKey}}
+{"mode":"Fire-and-forget","parameters":{"connectionName":"ApplicationConnection"},"batchId":"2a7bb48e-2f81-4bfe-acd3-e084c94588d3"}

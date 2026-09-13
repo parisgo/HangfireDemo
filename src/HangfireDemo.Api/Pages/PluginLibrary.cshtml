@@ -1,0 +1,59 @@
+@page "/plugin-library"
+@using HangfireDemo.Api.Security
+@{
+    Layout = null;
+    var admin = User.IsInRole(SecurityPolicies.HangfireAdmin);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plugin library · Hangfire</title>
+    <link rel="stylesheet" href="/job-manager.css" />
+</head>
+<body data-page-title="插件库" data-admin="@admin.ToString().ToLowerInvariant()">
+<main>
+    <header>
+        <div><p class="eyebrow">HANGFIRE / PLUGINS</p><h1 data-i18n="插件库">Plugin library</h1><p data-i18n="管理插件版本、查看加载状态和上传新功能。">Manage plugin versions, check loading status and upload new functions.</p></div>
+        <nav class="page-actions"><a class="dashboard" href="/hangfire">Hangfire DashBorad ↗</a><a class="button-link secondary" href="/job-manager" data-i18n="返回任务管理">Back to jobs</a>
+            <select class="language-select" data-language-picker aria-label="Language / 语言"><option value="en">English</option><option value="zh-CN">中文</option></select>
+        </nav>
+    </header>
+    <div hidden>@Html.AntiForgeryToken()</div>
+    <div id="feedback" role="status" aria-live="polite" hidden></div>
+    <section class="card">
+        <div class="section-title plugin-list-heading">
+            <h2 data-i18n="插件列表">Plugins</h2>
+            <div class="plugin-list-actions">
+                <span class="muted" data-i18n="每 5 秒刷新">Refreshes every 5 seconds</span>
+                @if (admin)
+                {
+                    <button type="button" id="add-plugin" aria-haspopup="dialog" aria-controls="upload-dialog" data-i18n="添加插件">Add plugin</button>
+                }
+            </div>
+        </div>
+        <div class="plugin-filters">
+            <div><label for="plugin-search" data-i18n="搜索插件">Search plugins</label><input id="plugin-search" type="search" placeholder="Plugin ID, function name or version" data-i18n-placeholder="插件 ID、功能名称或版本" /></div>
+            <div><label for="plugin-status" data-i18n="状态">Status</label><select id="plugin-status"><option value="" data-i18n="全部状态">All statuses</option><option value="Active" data-i18n="已激活">Active</option><option value="Pending" data-i18n="待加载">Pending</option><option value="Failed" data-i18n="加载失败">Load failed</option><option value="Superseded" data-i18n="历史版本">Superseded</option></select></div>
+        </div>
+        <div id="plugins"><p class="muted" data-i18n="正在读取插件…">Loading plugins…</p></div>
+        <nav class="plugin-pagination" aria-label="Plugin pagination" data-i18n-aria-label="插件列表分页"><span id="plugin-count" class="muted" aria-live="polite"></span><div class="page-actions"><button id="previous-page" type="button" class="secondary" data-i18n="上一页">Previous</button><button id="next-page" type="button" class="secondary" data-i18n="下一页">Next</button></div></nav>
+    </section>
+    @if (admin)
+    {
+        <dialog id="upload-dialog" class="manager-dialog" aria-labelledby="upload-title">
+            <div class="dialog-heading"><h2 id="upload-title" data-i18n="添加插件">Add plugin</h2><button type="button" id="close-upload" class="dialog-close" data-i18n="关闭">Close</button></div>
+            <div class="dialog-feedback" role="status" aria-live="polite" hidden></div>
+            <form id="upload-form" class="upload">
+                <label for="package" data-i18n="插件 ZIP 包">Plugin ZIP package</label><input id="package" type="file" accept=".zip" required />
+                <p class="hint" data-i18n="包含 plugin.json、DLL 和依赖，最大 50 MB。">Includes plugin.json, DLLs and dependencies. Maximum 50 MB.</p>
+                <button type="submit" data-i18n="上传并加载">Upload and load</button>
+            </form>
+        </dialog>
+    }
+</main>
+<script src="/i18n.js" defer></script>
+<script src="/plugin-library.js" defer></script>
+</body>
+</html>

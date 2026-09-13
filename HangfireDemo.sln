@@ -10,12 +10,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangfireDemo.Worker", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangfireDemo.Tests", "tests\HangfireDemo.Tests\HangfireDemo.Tests.csproj", "{8E226D71-C805-414D-A4C1-FA04D696110D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		database\002_create_plugins.sql = database\002_create_plugins.sql
 		global.json = global.json
 		README.md = README.md
+		README.zh-CN.md = README.zh-CN.md
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		examples\pack-import-commandes.ps1 = examples\pack-import-commandes.ps1
+		examples\pack-send-report.ps1 = examples\pack-send-report.ps1
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SendReport.Plugin", "examples\SendReport.Plugin\SendReport.Plugin.csproj", "{2C444A67-4455-6E50-B791-1D6C42C395DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportCommandes.Plugin", "examples\ImportCommandes.Plugin\ImportCommandes.Plugin.csproj", "{8411F1C4-FDA7-7EE7-728A-F0A82D65060C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportFormatting", "examples\ReportFormatting\ReportFormatting.csproj", "{DB2610F4-2F53-149E-9FF1-CFAF66D17045}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiDemo", "examples\WebApiDemo\WebApiDemo.csproj", "{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,9 +55,31 @@ Global
 		{8E226D71-C805-414D-A4C1-FA04D696110D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E226D71-C805-414D-A4C1-FA04D696110D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E226D71-C805-414D-A4C1-FA04D696110D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C444A67-4455-6E50-B791-1D6C42C395DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C444A67-4455-6E50-B791-1D6C42C395DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C444A67-4455-6E50-B791-1D6C42C395DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C444A67-4455-6E50-B791-1D6C42C395DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8411F1C4-FDA7-7EE7-728A-F0A82D65060C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8411F1C4-FDA7-7EE7-728A-F0A82D65060C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8411F1C4-FDA7-7EE7-728A-F0A82D65060C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8411F1C4-FDA7-7EE7-728A-F0A82D65060C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB2610F4-2F53-149E-9FF1-CFAF66D17045}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB2610F4-2F53-149E-9FF1-CFAF66D17045}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB2610F4-2F53-149E-9FF1-CFAF66D17045}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB2610F4-2F53-149E-9FF1-CFAF66D17045}.Release|Any CPU.Build.0 = Release|Any CPU
+		{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2C444A67-4455-6E50-B791-1D6C42C395DC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{8411F1C4-FDA7-7EE7-728A-F0A82D65060C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{DB2610F4-2F53-149E-9FF1-CFAF66D17045} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{125D6E7B-7871-4B94-8BC8-DFB0AF0501E9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A141D3A4-AC71-4C93-B56C-FEE923FCF0AF}

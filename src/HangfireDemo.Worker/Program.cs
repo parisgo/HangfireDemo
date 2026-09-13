@@ -1,19 +1,23 @@
 using Hangfire;
-using HangfireDemo.Core;
-using HangfireDemo.Core.Jobs;
+using HangfireDemo.Core.Plugins;
 using HangfireDemo.Core.Jobs.Configuration;
 using HangfireDemo.Core.Jobs.Health;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
+Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 var builder = WebApplication.CreateBuilder(args);
+HangfireDemo.Core.Logging.ApplicationLogging.AddApplicationLogging(builder.Logging,
+    builder.Configuration, builder.Environment.ContentRootPath, "Worker");
 
 var hangfireSettings = builder.Configuration
     .GetSection(HangfireSettings.SectionName)
     .Get<HangfireSettings>() ?? new HangfireSettings();
 
 builder.Services.AddHangfirePersistence(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddJobExecution();
+
+builder.Services.AddPluginStorage(builder.Configuration);
+builder.Services.AddPluginExecution();
+HangfireDemo.Core.WebApi.WebApiServices.AddWebApiExecution(builder.Services);
 
 builder.Services.AddHangfireServer(options =>
 {
@@ -24,7 +28,6 @@ builder.Services.AddHangfireServer(options =>
         : Math.Max(Environment.ProcessorCount, 2);
 });
 
-builder.Services.AddHostedService<RecurringJobRegistrar>();
 builder.Services.AddHealthChecks()
     .AddCheck<HangfireServerHealthCheck>("hangfire", tags: ["ready"]);
 
