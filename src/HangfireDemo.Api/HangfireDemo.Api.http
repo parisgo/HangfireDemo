@@ -1,0 +1,17 @@
+@ApiUrl = https://localhost:7180
+@ApiKey = replace-in-non-development
+
+### Readiness checks SQL storage and an active Worker heartbeat
+GET {{ApiUrl}}/health/ready
+
+### Enqueue with a caller-supplied idempotency key
+POST {{ApiUrl}}/api/jobs/import-commandes?batchId=2a7bb48e-2f81-4bfe-acd3-e084c94588d3
+X-Hangfire-Api-Key: {{ApiKey}}
+
+### Delayed execution
+POST {{ApiUrl}}/api/jobs/import-commandes/delayed?minutes=5
+X-Hangfire-Api-Key: {{ApiKey}}
+
+### Trigger the registered recurring job
+POST {{ApiUrl}}/api/jobs/import-commandes/trigger-recurring
+X-Hangfire-Api-Key: {{ApiKey}}
